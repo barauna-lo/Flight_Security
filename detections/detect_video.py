@@ -43,7 +43,7 @@ while True:
 
             idx_index = -1
             for class_id, score, bbox, idx in zip(classIDs, confidences, boxes, idxs):
-                class_name = labels[class_id]
+                class_name = labels[classIDs[idx]]
                 if class_name == 'person':
                     idxs = np.delete(idxs, idx_index)
             idx_index += 1

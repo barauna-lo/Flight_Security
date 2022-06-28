@@ -95,6 +95,7 @@ class BoundingBoxes:
 
     @staticmethod
     def draw_bounding_boxes(image, labels, boxes, confidences, classids, idxs, colors):
+        x_y_center = []
         if len(idxs) > 0:
             for i in idxs.flatten():
                 # extract bounding box coordinates
@@ -103,6 +104,7 @@ class BoundingBoxes:
 
                 # setting bbox center coordinates
                 x_center, y_center = x + int(w / 2), y + int(h / 2)
+                x_y_center.append([x_center, y_center])
 
                 # getting class label and detection score
                 label = str(labels[classids[i]])
@@ -113,7 +115,7 @@ class BoundingBoxes:
                 cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
                 cv2.circle(image, (x_center, y_center), 0, color, 5)
                 cv2.putText(image, (label + ' ' + confidence), (x, (y - 5)), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 2)
-        return image
+        return image, x_y_center
 
     @staticmethod
     def draw_bounding_boxes_confusion_matriz(image, boxes, color):

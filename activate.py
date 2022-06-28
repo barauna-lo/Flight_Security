@@ -10,11 +10,10 @@ from helpers.frame import Frame
 from performance.bounding_boxes import BoundingBoxes
 from performance.yolo_predictions import YoloPredictions
 from helpers.net_size import change_net_size
-
-# from coordinates.pixels_coordinate import click_event
+from coordinates.geo_coordinates import gsd
 
 flags.DEFINE_string('cfg', './detections/cfg/yolov4.cfg', 'path to cfg file')
-flags.DEFINE_integer('size', 416, 'resize images to')
+flags.DEFINE_integer('size', 1280, 'resize images to')
 flags.DEFINE_string('model', 'tiny', 'tiny or yolov4')
 flags.DEFINE_string('weights', './detections/weights/yolov4.weights', 'path to weights file')
 flags.DEFINE_string('data_path', './detections/frames', 'path to frames or video')
@@ -59,8 +58,6 @@ def main(_argv):
         data = []
         # loading images
         for frame in os.listdir(FLAGS.data_path):
-            # to every image in the folder, a .txt file will be created
-            #data = []
 
             # remove .jpg or any image type from image name
             image_name = frame.split(".")[0]
@@ -70,26 +67,39 @@ def main(_argv):
 
                 # net, layer_names, image, confidence, threshold, net_height, net_width
                 boxes, confidences, classIDs, idxs = YoloPredictions.make_prediction(net, layer_names, image,
-                                                                                     0.01, 0.03, FLAGS.size, FLAGS.size)
+                                                                                     0.005, 0.005, FLAGS.size, FLAGS.size)
 
                 print(image_name, ':')
                 idx_index = 0
-                for class_id, score, bbox, idx in zip(classIDs, confidences, boxes, idxs):
+                for idx in idxs:
 
-                    class_name = labels[class_id]
-                    if class_name == 'person':
-                        print(class_name, int(score * 100), "%")
-                        x, y, w, h = bbox
-                        data.append([image_name, FLAGS.size, FLAGS.model, class_name, round(score * 100), x, y, w, h])
+                    class_name = labels[classIDs[idx]]
+                    if class_name == "person":
+                        print(class_name, round(confidences[idx] * 100), "%")
+                        x, y, w, h = boxes[idx]
+                        data.append([image_name, FLAGS.size, FLAGS.model, class_name, round(confidences[idx] * 100), x, y, w, h])
+                        idx_index += 1
                     else:
                         idxs = np.delete(idxs, idx_index)
+                        #idx_index += 1
 
-                frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs, colors)
-                frame = Frame.image_center(frame)
+                frame, x_y_center = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs, colors)
+                frame, img_x_y_center = Frame.image_center(frame)
+
+                # Calculo Camera (flir Duo)
+                sensor_width = 7.4  # mm
+                sensor_height = 5.55  # mm
+                focal_lenght = 8  # mm
+                camera_height = 20  # m
+                height, width = frame.shape[:2]
+
+                GSD = gsd(sensor_width, camera_height, focal_lenght, width)  # metros/pixel
+                #print(GSD)
+                distances = Frame.distance(x_y_center, img_x_y_center, GSD)
+
+                frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, distances)
+
                 cv2.imwrite(f'{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg', frame)
-
-
-
                 i += 1
                 print(i, 'of', len(os.listdir(FLAGS.data_path)), 'images')
             else:

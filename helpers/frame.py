@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 
 
 class Frame:
@@ -62,6 +63,31 @@ class Frame:
 
         cv2.line(image, start_point_vertical, end_point_vertical, (255, 0, 0), 1)
 
-        return image
+        img_x_y_center = [int(width / 2), int(height /2)]
+
+        return image, img_x_y_center
+
+    @staticmethod
+    def draw_dist(frame, bbox_x_y_center, img_x_y_center, distance):
+        i = 0
+        for bb_center in bbox_x_y_center:
+            cv2.line(frame, (img_x_y_center[0], img_x_y_center[1]), (bb_center[0], bb_center[1]), (255, 0, 0), 2)
+            cv2.putText(frame, f'{distance[i]} m', (bb_center[0] + 50, bb_center[1]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 2)
+            i += 1
+        return frame
+
+    @staticmethod
+    def distance(bbox_x_y_center, img_x_y_center, GSD):
+        distances = []
+        img_x_y_center = np.array(img_x_y_center)
+
+        for bb_center in bbox_x_y_center:
+            bb_center = np.array((bb_center[0], bb_center[1]))
+            dist_pix = np.linalg.norm(img_x_y_center - bb_center)  # valor em Pixel
+            dist = round(dist_pix * GSD, 2)
+            distances.append(dist)
+        return distances
+
+
 
 
