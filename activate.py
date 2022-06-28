@@ -52,48 +52,49 @@ def main(_argv):
     if FLAGS.data_type == 'frame':
         i = 0
         # loading images
-        while i < len(os.listdir(FLAGS.data_path)):
+        #while i < len(os.listdir(FLAGS.data_path)):
 
-            #to every image in the folder, a .txt file will be created
-            for frame in os.listdir(FLAGS.data_path):
-                data = []
+        #to every image in the folder, a .txt file will be created
+        for frame in os.listdir(FLAGS.data_path):
+            data = []
 
-                #remove .jpg or any image type from image name
-                image_name = frame.split(".")[0]
+            #remove .jpg or any image type from image name
+            image_name = frame.split(".")[0]
 
-                image = cv2.imread(os.path.join(FLAGS.data_path, frame))
+            image = cv2.imread(os.path.join(FLAGS.data_path, frame))
 
-                if not image is None:
+            if not image is None:
 
-                    # net, layer_names, image, confidence, threshold, net_height, net_width
-                    boxes, confidences, classIDs, idxs = YoloPredictions.make_prediction(net, layer_names, image,
-                                                                                             0.01, 0.03, 960, 960)
+                # net, layer_names, image, confidence, threshold, net_height, net_width
+                boxes, confidences, classIDs, idxs = YoloPredictions.make_prediction(net, layer_names, image,
+                                                                                         0.01, 0.03, 960, 960)
 
-                    print(image_name, ':')
-                    idx_index = -1
-                    for class_id, score, bbox, idx in zip(classIDs, confidences, boxes, idxs):
+                print(image_name, ':')
+                idx_index = -1
+                for class_id, score, bbox, idx in zip(classIDs, confidences, boxes, idxs):
 
-                        class_name = labels[class_id]
-                        if class_name == 'person':
-                            print(class_name, int(score * 100),"%")
-                            x, y, w, h = bbox
-                            data.append([class_name, int(score * 100), x, y, w, h])
-                        else:
-                            idxs = np.delete(idxs, idx_index)
+                    class_name = labels[class_id]
+                    if class_name == 'person':
+                        print(class_name, int(score * 100),"%")
+                        x, y, w, h = bbox
+                        data.append([class_name, int(score * 100), x, y, w, h])
+                    else:
+                        idxs = np.delete(idxs, idx_index)
 
-                    frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs,
-                                                              colors)
+                frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs,
+                                                          colors)
 
-                    cv2.imwrite(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg", frame)
+                cv2.imwrite(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg", frame)
 
-                    with open(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.txt", 'w') as f:
-                        for line in data:
-                            f.write('%s\n' % line)
-                else:
-                    print('Image has ended, failed or wrong path was given.')
-                    break
-            i += 1
-            print(i, 'of', len(os.listdir(FLAGS.data_path)), 'images')
+                with open(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.txt", 'w') as f:
+                    for line in data:
+                        f.write('%s\n' % line)
+                i += 1
+                print(i, 'of', len(os.listdir(FLAGS.data_path)), 'images')
+            else:
+                print('Image has ended, failed or wrong path was given.')
+                break
+
 
         cv2.destroyAllWindows()
     else:
