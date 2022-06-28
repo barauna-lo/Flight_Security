@@ -52,25 +52,22 @@ def main(_argv):
     if FLAGS.data_type == 'frame':
         i = 0
         # loading images
-        #while i < len(os.listdir(FLAGS.data_path)):
-
-        #to every image in the folder, a .txt file will be created
         for frame in os.listdir(FLAGS.data_path):
+            # to every image in the folder, a .txt file will be created
             data = []
 
             #remove .jpg or any image type from image name
             image_name = frame.split(".")[0]
-
             image = cv2.imread(os.path.join(FLAGS.data_path, frame))
 
             if not image is None:
 
                 # net, layer_names, image, confidence, threshold, net_height, net_width
                 boxes, confidences, classIDs, idxs = YoloPredictions.make_prediction(net, layer_names, image,
-                                                                                         0.01, 0.03, 960, 960)
+                                                                                         0.01, 0.03, FLAGS.size, FLAGS.size)
 
                 print(image_name, ':')
-                idx_index = -1
+                idx_index = 0
                 for class_id, score, bbox, idx in zip(classIDs, confidences, boxes, idxs):
 
                     class_name = labels[class_id]
