@@ -4,7 +4,7 @@ from performance.bounding_boxes import BoundingBoxes
 from detections.yolo_predictions import YoloPredictions
 
 save_path = '/home/ellentuane/Documents/IC/Flight Security/detections/extracted_bbox'
-video_path = '/home/ellentuane/Documents/IC/Flight Security/detections/frames/20211020_104038_023.jpg'
+video_path = '/home/ellentuane/Documents/IC/Flight Security/detections/video/test.mp4'
 classes_path = '/home/ellentuane/Documents/IC/Flight Security/detections/classes/coco.names'
 cfg_path = '/home/ellentuane/Documents/IC/Flight Security/detections/cfg/yolov4-tiny.cfg'
 weight_path = '/home/ellentuane/Documents/IC/Flight Security/detections/weights/yolov4-tiny.weights'
@@ -27,6 +27,8 @@ if use_gpu == 1:
 layer_names = YoloPredictions.layer_name(net)
 
 cap = cv2.VideoCapture(video_path)
+video_name = video_path.split("/")[-1]
+video_name = video_name.split(".")[0]
 
 stop = 0
 i = 0
@@ -37,12 +39,17 @@ while True:
             #net, layer_names, image, confidence, threshold, net_height, net_width
             boxes, confidences, classIDs, idxs = YoloPredictions.make_prediction(net, layer_names, frame,
                                                                                  0.01, 0.03, 960, 960)
-            for class_id, score, bbox in zip(classIDs, confidences, boxes):
-                x, y, w, h = bbox
-                name = labels[class_id]
-                if name == 'person':
-                    frame = BoundingBoxes.draw_bounding_boxes(frame, name, boxes, confidences, classIDs, idxs, colors)
-                cv2.imshow('frame', frame)
+
+            idx_index = -1
+            for class_id, score, bbox, idx in zip(classIDs, confidences, boxes, idxs):
+                class_name = labels[class_id]
+                if class_name == 'person':
+                    idxs = np.delete(idxs, idx_index)
+            idx_index += 1
+
+            frame = BoundingBoxes.draw_bounding_boxes(frame, labels, boxes, confidences, classIDs, idxs, colors)
+            cv2.imshow('frame', frame)
+
         else:
             print('Video has ended, failed or wrong path was given, try a different video format!')
             break
