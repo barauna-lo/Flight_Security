@@ -1,4 +1,6 @@
 import os
+
+import pandas as pd
 from absl import app, flags
 from absl.flags import FLAGS
 import cv2
@@ -9,11 +11,13 @@ from performance.bounding_boxes import BoundingBoxes
 from performance.yolo_predictions import YoloPredictions
 from helpers.net_size import change_net_size
 
+# from coordinates.pixels_coordinate import click_event
+
 flags.DEFINE_string('cfg', './detections/cfg/yolov4.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 416, 'resize images to')
 flags.DEFINE_string('model', 'tiny', 'tiny or yolov4')
 flags.DEFINE_string('weights', './detections/weights/yolov4.weights', 'path to weights file')
-flags.DEFINE_string('data_path',  './detections/frames', 'path to frames or video')
+flags.DEFINE_string('data_path', './detections/frames', 'path to frames or video')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/coco.names', 'path to classes name video')
 flags.DEFINE_string('data_type', 'frame', 'set video or frame')
@@ -52,12 +56,13 @@ def main(_argv):
 
     if FLAGS.data_type == 'frame':
         i = 0
+        data = []
         # loading images
         for frame in os.listdir(FLAGS.data_path):
             # to every image in the folder, a .txt file will be created
-            data = []
+            #data = []
 
-            #remove .jpg or any image type from image name
+            # remove .jpg or any image type from image name
             image_name = frame.split(".")[0]
             image = cv2.imread(os.path.join(FLAGS.data_path, frame))
 
@@ -65,7 +70,7 @@ def main(_argv):
 
                 # net, layer_names, image, confidence, threshold, net_height, net_width
                 boxes, confidences, classIDs, idxs = YoloPredictions.make_prediction(net, layer_names, image,
-                                                                                         0.01, 0.03, FLAGS.size, FLAGS.size)
+                                                                                     0.01, 0.03, FLAGS.size, FLAGS.size)
 
                 print(image_name, ':')
                 idx_index = 0
@@ -73,25 +78,26 @@ def main(_argv):
 
                     class_name = labels[class_id]
                     if class_name == 'person':
-                        print(class_name, int(score * 100),"%")
+                        print(class_name, int(score * 100), "%")
                         x, y, w, h = bbox
-                        data.append([class_name, int(score * 100), x, y, w, h])
+                        data.append([image_name, FLAGS.size, FLAGS.model, class_name, round(score * 100), x, y, w, h])
                     else:
                         idxs = np.delete(idxs, idx_index)
 
                 frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs, colors)
                 frame = Frame.image_center(frame)
-                cv2.imwrite(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg", frame)
+                cv2.imwrite(f'{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg', frame)
 
-                with open(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.txt", 'w') as f:
-                    for line in data:
-                        f.write('%s\n' % line)
+
+
                 i += 1
                 print(i, 'of', len(os.listdir(FLAGS.data_path)), 'images')
             else:
                 print('Image has ended, failed or wrong path was given.')
                 break
 
+        df = pd.DataFrame(data, columns=['image_name', 'net_size', 'model', 'class', 'score', 'x', 'y', 'w', 'h'])
+        df.to_csv(f"{FLAGS.output}/extracting_bbox.csv", index=False)
 
         cv2.destroyAllWindows()
     else:
