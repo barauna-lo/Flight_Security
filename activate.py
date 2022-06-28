@@ -10,12 +10,12 @@ from helpers.net_size import change_net_size
 
 flags.DEFINE_string('cfg', './detections/cfg/yolov4.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 416, 'resize images to')
-flags.DEFINE_string('model', 'yolov4', 'tiny or yolov4')
+flags.DEFINE_string('model', 'tiny', 'tiny or yolov4')
 flags.DEFINE_string('weights', './detections/weights/yolov4.weights', 'path to weights file')
 flags.DEFINE_string('data_path',  './detections/frames', 'path to frames or video')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/coco.names', 'path to classes name video')
-flags.DEFINE_string('data_type', 'video', 'set video or frame')
+flags.DEFINE_string('data_type', 'frame', 'set video or frame')
 
 
 def main(_argv):
@@ -69,19 +69,22 @@ def main(_argv):
                     boxes, confidences, classIDs, idxs = YoloPredictions.make_prediction(net, layer_names, image,
                                                                                              0.01, 0.03, 960, 960)
 
+                    print(image_name, ':')
                     idx_index = -1
                     for class_id, score, bbox, idx in zip(classIDs, confidences, boxes, idxs):
-                        x, y, w, h = bbox
+
                         class_name = labels[class_id]
                         if class_name == 'person':
-                            idxs = np.delete(idxs, idx_index)
+                            print(class_name, int(score * 100),"%")
+                            x, y, w, h = bbox
                             data.append([class_name, int(score * 100), x, y, w, h])
                         else:
-                            pass
+                            idxs = np.delete(idxs, idx_index)
 
-                    frame = BoundingBoxes.draw_bounding_boxes(frame, labels, boxes, confidences, classIDs, idxs,
+                    frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs,
                                                               colors)
-                    cv2.imshow('frame', frame)
+
+                    cv2.imwrite(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg", frame)
 
                     with open(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.txt", 'w') as f:
                         for line in data:
@@ -90,7 +93,8 @@ def main(_argv):
                     print('Image has ended, failed or wrong path was given.')
                     break
             i += 1
-            print("image:", i)
+            print(i, 'of', len(os.listdir(FLAGS.data_path)), 'images')
+
         cv2.destroyAllWindows()
     else:
         cap = cv2.VideoCapture(FLAGS.data_path)
