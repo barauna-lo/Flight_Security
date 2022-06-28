@@ -4,6 +4,7 @@ from absl.flags import FLAGS
 import cv2
 import numpy as np
 
+from helpers.frame import Frame
 from performance.bounding_boxes import BoundingBoxes
 from performance.yolo_predictions import YoloPredictions
 from helpers.net_size import change_net_size
@@ -78,9 +79,8 @@ def main(_argv):
                     else:
                         idxs = np.delete(idxs, idx_index)
 
-                frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs,
-                                                          colors)
-
+                frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs, colors)
+                frame = Frame.image_center(frame)
                 cv2.imwrite(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg", frame)
 
                 with open(f"{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.txt", 'w') as f:

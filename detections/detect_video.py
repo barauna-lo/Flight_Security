@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from performance.bounding_boxes import BoundingBoxes
 from detections.yolo_predictions import YoloPredictions
+from helpers.frame import Frame
 
 save_path = '/home/ellentuane/Documents/IC/Flight Security/detections/extracted_bbox'
 video_path = '/home/ellentuane/Documents/IC/Flight Security/detections/video/test.mp4'
@@ -48,6 +49,8 @@ while True:
             idx_index += 1
 
             frame = BoundingBoxes.draw_bounding_boxes(frame, labels, boxes, confidences, classIDs, idxs, colors)
+            frame = Frame.image_center(frame)
+
             cv2.imshow('frame', frame)
 
         else:

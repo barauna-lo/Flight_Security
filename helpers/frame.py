@@ -48,3 +48,20 @@ class Frame:
 
         return cv2.resize(frame, dimensions, interpolation=cv2.INTER_AREA)
 
+    @staticmethod
+    def image_center(image):
+        height, width = image.shape[:2]
+
+        start_point_horizontal = (0, int(height / 2))
+        end_point_horizontal = (width, int(height / 2))
+
+        cv2.line(image, start_point_horizontal, end_point_horizontal, (255, 0, 0), 1)
+
+        start_point_vertical = (int(width / 2), 0)
+        end_point_vertical = (int(width / 2), height)
+
+        cv2.line(image, start_point_vertical, end_point_vertical, (255, 0, 0), 1)
+
+        return image
+
+
