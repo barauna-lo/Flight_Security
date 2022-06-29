@@ -21,6 +21,11 @@ flags.DEFINE_string('data_path', './detections/tste', 'path to frames or video')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/coco.names', 'path to classes name video')
 flags.DEFINE_string('data_type', 'frame', 'set video or frame')
+flags.DEFINE_float('sensor_width', 7.4, 'Camera sensor width') # mm
+flags.DEFINE_float('sensor_height', 5.55, 'Camera sensor_height') # mm
+flags.DEFINE_float('focal_length', 8, 'Camera focal_length') # mm
+flags.DEFINE_float('camera_height', 10, 'Camera amera_height') # mm
+flags.DEFINE_boolean('save_data', True, 'save data into csv file')
 
 
 def main(_argv):
@@ -66,6 +71,7 @@ def main(_argv):
             image_name_list.append(image_name)
 
             image = cv2.imread(os.path.join(FLAGS.data_path, frame))
+            height, width = image.shape[:2]
 
             if not image is None:
 
@@ -87,22 +93,17 @@ def main(_argv):
                         idxs = np.delete(idxs, idx_index)
                         #idx_index += 1
 
+                # Draw bboxes in the image
                 frame, x_y_center = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs, colors)
+                # Find image center point
                 frame, img_x_y_center = Frame.image_center(frame)
-
-                # Calculo Camera (flir Duo)
-                sensor_width = 7.4  # mm
-                sensor_height = 5.55  # mm
-                focal_lenght = 8  # mm
-                camera_height = 10  # m
-                height, width = frame.shape[:2]
-
-                GSD = gsd(sensor_width, camera_height, focal_lenght, width)  # metros/pixel
-                #print(GSD)
+                # Calculating GSD
+                GSD = gsd(FLAGS.sensor_width, FLAGS.camera_height, FLAGS.focal_length, FLAGS.width)  # metros/pixel
+                # Calculating distance
                 distances = Frame.distance(x_y_center, img_x_y_center, GSD)
-
+                # Draw line from image center to bbox center
                 frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, distances)
-
+                # Save final image
                 cv2.imwrite(f'{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg', frame)
 
                 i += 1
@@ -111,10 +112,11 @@ def main(_argv):
                 print('Image has ended, failed or wrong path was given.')
                 break
 
-        df = pd.DataFrame(data, columns=['image_name', 'net_size', 'model', 'class', 'score', 'x', 'y', 'w', 'h'])
-        df['distance'] = distances
-
-        df.to_csv(f"{FLAGS.output}/extracting_bbox_{camera_height}m_{GSD}gsd.csv", index=False)
+        if FLAGS.save_data:
+            # Save data into csv file
+            df = pd.DataFrame(data, columns=['image_name', 'net_size', 'model', 'class', 'score', 'x', 'y', 'w', 'h'])
+            df['distance'] = distances
+            df.to_csv(f"{FLAGS.output}/extracting_bbox_{FLAGS.camera_height}m_{round(GSD, 5)}gsd.csv", index=False)
 
         cv2.destroyAllWindows()
     else:
