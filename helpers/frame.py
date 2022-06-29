@@ -63,7 +63,7 @@ class Frame:
 
         cv2.line(image, start_point_vertical, end_point_vertical, (255, 0, 0), 1)
 
-        img_x_y_center = [int(width / 2), int(height /2)]
+        img_x_y_center = [int(width / 2), int(height / 2)]
 
         return image, img_x_y_center
 
@@ -72,7 +72,8 @@ class Frame:
         i = 0
         for bb_center in bbox_x_y_center:
             cv2.line(frame, (img_x_y_center[0], img_x_y_center[1]), (bb_center[0], bb_center[1]), (255, 0, 0), 2)
-            cv2.putText(frame, f'{distance[i]} m', (bb_center[0] + 50, bb_center[1]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 2)
+            cv2.putText(frame, f'{distance[i]} m', (bb_center[0] + 50, bb_center[1]), cv2.FONT_HERSHEY_PLAIN, 1,
+                        (255, 255, 255), 2)
             i += 1
         return frame
 
@@ -88,6 +89,24 @@ class Frame:
             distances.append(dist)
         return distances
 
+    @staticmethod
+    def click_event(event, x, y, flags, params):
+        # function to display the pixel coordinates
+        # of the points clicked on the image  # ix, iy = [], []
 
+        global ix, iy
+        # checking for left mouse clicks
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # displaying the coordinates
+            # on the Shell
+            print(x, ' ', y)
+            ix.append(x), iy.append(y)
+            print('dentro da funcao', ix, iy)
 
-
+            # displaying the coordinates
+            # on the image window
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(frame, str(x) + ',' +
+                        str(y), (x, y), font,
+                        1, (255, 0, 0), 2)
+            cv2.imshow('image', frame)

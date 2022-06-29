@@ -11,6 +11,7 @@ from performance.bounding_boxes import BoundingBoxes
 from performance.yolo_predictions import YoloPredictions
 from helpers.net_size import change_net_size
 from coordinates.geo_coordinates import gsd
+from helpers.frame import Frame
 
 flags.DEFINE_string('cfg', './detections/cfg/yolov4.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 1280, 'resize images to')
