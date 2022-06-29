@@ -3,7 +3,7 @@ import cv2
 
 # function to display the pixel coordinates
 # of the points clicked on the image
-ix,iy = -1,-1
+ix, iy = [], []
 def click_event(event, x, y, flags, params):
     global ix, iy
     # checking for left mouse clicks
@@ -11,7 +11,7 @@ def click_event(event, x, y, flags, params):
         # displaying the coordinates
         # on the Shell
         print(x, ' ', y)
-        ix, iy = x, y
+        ix.append(x), iy.append(y)
         print('dentro da funcao', ix, iy)
 
         # displaying the coordinates
