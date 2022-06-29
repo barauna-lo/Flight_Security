@@ -17,7 +17,7 @@ flags.DEFINE_string('cfg', './detections/cfg/yolov4.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 1280, 'resize images to')
 flags.DEFINE_string('model', 'tiny', 'tiny or yolov4')
 flags.DEFINE_string('weights', './detections/weights/yolov4.weights', 'path to weights file')
-flags.DEFINE_string('data_path', './detections/frames', 'path to frames or video')
+flags.DEFINE_string('data_path', './detections/tste', 'path to frames or video')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/coco.names', 'path to classes name video')
 flags.DEFINE_string('data_type', 'frame', 'set video or frame')
@@ -57,11 +57,14 @@ def main(_argv):
     if FLAGS.data_type == 'frame':
         i = 0
         data = []
+        image_name_list = []
         # loading images
         for frame in os.listdir(FLAGS.data_path):
 
             # remove .jpg or any image type from image name
             image_name = frame.split(".")[0]
+            image_name_list.append(image_name)
+
             image = cv2.imread(os.path.join(FLAGS.data_path, frame))
 
             if not image is None:
@@ -91,7 +94,7 @@ def main(_argv):
                 sensor_width = 7.4  # mm
                 sensor_height = 5.55  # mm
                 focal_lenght = 8  # mm
-                camera_height = 20  # m
+                camera_height = 10  # m
                 height, width = frame.shape[:2]
 
                 GSD = gsd(sensor_width, camera_height, focal_lenght, width)  # metros/pixel
@@ -101,6 +104,7 @@ def main(_argv):
                 frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, distances)
 
                 cv2.imwrite(f'{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg', frame)
+
                 i += 1
                 print(i, 'of', len(os.listdir(FLAGS.data_path)), 'images')
             else:
@@ -108,7 +112,9 @@ def main(_argv):
                 break
 
         df = pd.DataFrame(data, columns=['image_name', 'net_size', 'model', 'class', 'score', 'x', 'y', 'w', 'h'])
-        df.to_csv(f"{FLAGS.output}/extracting_bbox.csv", index=False)
+        df['distance'] = distances
+
+        df.to_csv(f"{FLAGS.output}/extracting_bbox_{camera_height}m_{GSD}gsd.csv", index=False)
 
         cv2.destroyAllWindows()
     else:
