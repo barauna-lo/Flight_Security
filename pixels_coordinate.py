@@ -1,9 +1,9 @@
 import os
-
 import cv2
+import pandas as pd
 
-data_path = "/home/ellentuane/Documents/IC/Flight Security/detections/frames"
-#ix, iy = [], []
+data_path = ''
+output_path = ''
 
 
 def click_event(event, x, y, flags, params):
@@ -14,35 +14,19 @@ def click_event(event, x, y, flags, params):
     if event == cv2.EVENT_LBUTTONDOWN:
         # displaying the coordinates
         # on the Shell
-        print(x, ' ', y)
-        ix.append(x), iy.append(y)
-        print('dentro da funcao', ix, iy)
+        #print(x, ' ', y)
+        #ix.append(x), iy.append(y)
+        ix = x
+        iy = y
+        #print('dentro da funcao', ix, iy)
 
         # displaying the coordinates
         # on the image window
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(frame, str(x) + ',' +
-                    str(y), (x, y), font,
-                    1, (255, 0, 0), 2)
-        cv2.imshow('image', frame)
+        #font = cv2.FONT_HERSHEY_SIMPLEX
+        #cv2.putText(frame, str(x) + ',' + str(y), (x, y), font, 1, (255, 0, 0), 2)
+        #cv2.imshow('image', frame)
 
-    # checking for right mouse clicks
-    if event == cv2.EVENT_RBUTTONDOWN:
-        # displaying the coordinates
-        # on the Shell
-        print(x, ' ', y)
 
-        # displaying the coordinates
-        # on the image window
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        b = frame[y, x, 0]
-        g = frame[y, x, 1]
-        r = frame[y, x, 2]
-        cv2.putText(frame, str(b) + ',' +
-                    str(g) + ',' + str(r),
-                    (x, y), font, 1,
-                    (255, 255, 0), 2)
-        cv2.imshow('image', frame)
 
 
 # driver function
@@ -69,8 +53,9 @@ if __name__ == "__main__":
     # close the window
     #cv2.destroyAllWindows() nao descomentar
 
-    i = 0
-    data = []
+    i = 1
+    geo_reference = []
+
     # loading images
     for frame in os.listdir(data_path):
         ix, iy = [], []
@@ -81,12 +66,16 @@ if __name__ == "__main__":
 
         if not image is None:
             height, width = image.shape[:2]
-            cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-            cv2.resizeWindow('image', width, height)
-            cv2.setMouseCallback('image', click_event)
-            print('fora da funcao', ix, iy)
-            cv2.imshow('image', image)
-            cv2.waitKey(5000) & 0xFF
-            print('fora da funcao2', ix, iy)
+            cv2.namedWindow(f'{image_name}', cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(f'{image_name}', width, height)
+            cv2.setMouseCallback(f'{image_name}', click_event)
+            #print('fora da funcao', ix, iy)
+            cv2.imshow(f'{image_name}', image)
+            cv2.waitKey(3000) & 0xFF
+            #print('fora da funcao2', ix, iy)
+            geo_reference.append([image_name, ix, iy])
+            print(i, 'of', len(os.listdir(data_path)), 'images')
 
-        i += 1
+            i += 1
+    df = pd.DataFrame(geo_reference, columns=['image_name', "pixel_x", "pixel_y"])
+    df.to_csv(f"{output_path}/geo_reference_15m_1.csv", index=False)
