@@ -1,10 +1,14 @@
+import os
+
 import cv2
 
+data_path = "/home/ellentuane/Documents/IC/Flight Security/detections/frames"
+#ix, iy = [], []
 
-# function to display the pixel coordinates
-# of the points clicked on the image
-ix, iy = [], []
+
 def click_event(event, x, y, flags, params):
+    # function to display the pixel coordinates
+    # of the points clicked on the image
     global ix, iy
     # checking for left mouse clicks
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -44,28 +48,45 @@ def click_event(event, x, y, flags, params):
 # driver function
 if __name__ == "__main__":
     # reading the image
-    frame = cv2.imread('100_0860_0026.JPG')
-    height, width = frame.shape[:2]
-    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('image', width, height)
-    #cv2.imshow('image', frame)
-    # img = cv2.imread('100_0860_0026.JPG', 1)
-
-    # displaying the image
-    # cv2.imshow('image', img)
+    #frame = cv2.imread('100_0860_0026.JPG')
+    #height, width = frame.shape[:2]
+    #cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+    #cv2.resizeWindow('image', width, height)
 
     # setting mouse handler for the image
     # and calling the click_event() function
-    cv2.setMouseCallback('image', click_event)
-    print('fora da funcao', ix, iy)
+    #cv2.setMouseCallback('image', click_event)
+    #print('fora da funcao', ix, iy)
 
 
-    cv2.imshow('image', frame)
-    k = cv2.waitKey(5000) & 0xFF
-    print('fora da funcao2', ix, iy)
+    #cv2.imshow('image', frame)
+    #k = cv2.waitKey(5000) & 0xFF
+    #print('fora da funcao2', ix, iy)
 
     # wait for a key to be pressed to exit
-    #cv2.waitKey(0)
+    #cv2.waitKey(0) nao descomentar
 
     # close the window
-    #cv2.destroyAllWindows()
+    #cv2.destroyAllWindows() nao descomentar
+
+    i = 0
+    data = []
+    # loading images
+    for frame in os.listdir(data_path):
+        ix, iy = [], []
+
+        # remove .jpg or any image type from image name
+        image_name = frame.split(".")[0]
+        image = cv2.imread(os.path.join(data_path, frame))
+
+        if not image is None:
+            height, width = image.shape[:2]
+            cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+            cv2.resizeWindow('image', width, height)
+            cv2.setMouseCallback('image', click_event)
+            print('fora da funcao', ix, iy)
+            cv2.imshow('image', image)
+            cv2.waitKey(5000) & 0xFF
+            print('fora da funcao2', ix, iy)
+
+        i += 1
