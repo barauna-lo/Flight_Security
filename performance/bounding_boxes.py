@@ -95,31 +95,21 @@ class BoundingBoxes:
 
     @staticmethod
     def draw_bounding_boxes(image, labels, boxes, confidences, classids, idxs, colors):
-        #x_y_center = []
-        bboxes_data = []
+
         if len(idxs) > 0:
             for i in idxs.flatten():
                 # extract bounding box coordinates
                 x, y = boxes[i][0], boxes[i][1]
                 w, h = boxes[i][2], boxes[i][3]
-
-
-                # setting bbox center coordinates
-                #x_center, y_center = x + int(w / 2), y + int(h / 2)
-                #x_y_center.append([x_center, y_center])
-
                 # getting class label and detection score
                 label = str(labels[classids[i]])
                 confidence = str(round(confidences[i]*100)) + "%"
 
-                bboxes_data.append([label, confidence, x, y, w, h])
-
                 # draw the bounding box and labels on the image
                 color = [int(c) for c in colors[classids[i]]]
                 cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
-                #cv2.circle(image, (x_center, y_center), 0, color, 5)
                 cv2.putText(image, (label + ' ' + confidence), (x, (y - 5)), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 2)
-        return image, bboxes_data
+        return image
 
     @staticmethod
     def draw_bounding_boxes_confusion_matriz(image, boxes, color):
@@ -135,7 +125,7 @@ class BoundingBoxes:
 
 
     @staticmethod
-    def center_bbox(image, boxes):
+    def center_bbox(boxes):
         x_y_center = []
         if len(boxes) > 0:
             for i in boxes:
@@ -144,9 +134,33 @@ class BoundingBoxes:
                 w, h = i[2], i[3]
                 x_center, y_center = x + int(w / 2), y + int(h / 2)
                 x_y_center.append([x_center, y_center])
+        return x_y_center
+
+    @staticmethod
+    def draw_center_bbox(image, boxes):
+        if len(boxes) > 0:
+            for i in boxes:
+                # extract bounding box coordinates
+                x, y = i[0], i[1]
+                w, h = i[2], i[3]
+                x_center, y_center = x + int(w / 2), y + int(h / 2)
                 # draw the bounding box center
                 cv2.circle(image, (x_center, y_center), 0, (0, 0, 255), 5)
-        return image, x_y_center
+        return image
+
+    @staticmethod
+    def bbox_class_filter(labels, boxes, confidences, classids, idxs):
+        bboxes_data = []
+        if len(idxs) > 0:
+            for i in idxs.flatten():
+                # extract bounding box coordinates
+                x, y = boxes[i][0], boxes[i][1]
+                w, h = boxes[i][2], boxes[i][3]
+                # getting class label and detection score
+                label = str(labels[classids[i]])
+                confidence = str(round(confidences[i] * 100)) + "%"
+                bboxes_data.append([label, confidence, x, y, w, h])
+        return bboxes_data
 
 
 

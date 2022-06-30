@@ -17,7 +17,7 @@ flags.DEFINE_string('cfg', './detections/cfg/yolov4.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 1280, 'resize images to')
 flags.DEFINE_string('model', 'tiny', 'tiny or yolov4')
 flags.DEFINE_string('weights', './detections/weights/yolov4.weights', 'path to weights file')
-flags.DEFINE_string('data_path', './detections/frames', 'path to frames or video')
+flags.DEFINE_string('data_path', './detections/tste', 'path to frames or video')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/coco.names', 'path to classes name video')
 flags.DEFINE_string('data_type', 'frame', 'set video or frame')
@@ -26,7 +26,7 @@ flags.DEFINE_float('sensor_height', 5.55, 'Camera sensor_height') # mm
 flags.DEFINE_float('focal_length', 8, 'Camera focal_length') # mm
 flags.DEFINE_float('camera_height', 10, 'Camera amera_height') # mm
 flags.DEFINE_boolean('save_data', True, 'save data into csv file')
-flags.DEFINE_boolean('save_frames', False, 'save frames')
+flags.DEFINE_boolean('save_frames', True, 'save frames')
 
 
 def main(_argv):
@@ -87,24 +87,27 @@ def main(_argv):
                         idx_index += 1
                     else:
                         idxs = np.delete(idxs, idx_index)
-                        #idx_index += 1
+                        # idx_index += 1
 
-                # Draw bboxes in the image
-                frame, bbox_data = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs, colors)
-                # draw bbox center points
-                boxes = []
+                # extract best bbox from class filtering
+                bbox_data = BoundingBoxes.bbox_class_filter(labels, boxes, confidences, classIDs, idxs)
+
+                # extract bbox center points
+                bbox_center_points = []
                 for data in bbox_data:
-                    boxes.append([data[2], data[3], data[4], data[5]])
-                frame, x_y_center = BoundingBoxes.center_bbox(frame, boxes)
+                    bbox_center_points.append([data[2], data[3], data[4], data[5]])
+                x_y_center = BoundingBoxes.center_bbox(bbox_center_points)
+
                 # Find image center point
-                frame, img_x_y_center = Frame.image_center(frame)
+                img_x_y_center = Frame.image_center(height, width)
+
                 # Calculating GSD
                 GSD = gsd(FLAGS.sensor_width, FLAGS.camera_height, FLAGS.focal_length, width)  # metros/pixel
+
                 # Calculating distance
                 dist = Frame.distance(x_y_center, img_x_y_center, GSD)
-                # Draw line from image center to bbox center
-                frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, dist)
 
+                # gathering all data in one variable
                 for item in range(len(bbox_data)):
                     bbox_data[item].append(x_y_center[item][0])
                     bbox_data[item].append(x_y_center[item][1])
@@ -117,10 +120,21 @@ def main(_argv):
                     bbox_data[item].append(img_x_y_center[1])
                     bbox_data[item].append(FLAGS.camera_height)
 
+                # adding data to data frame variable
                 for complete in range(len(bbox_data)):
                     df_data.append(bbox_data[complete])
 
                 if FLAGS.save_frames:
+                    # Draw bboxes in the image
+                    frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs, colors)
+                    frame = BoundingBoxes.draw_center_bbox(frame, bbox_center_points)
+
+                    # Draw image center lines
+                    frame = Frame.draw_image_center(frame, height, width)
+
+                    # Draw line from image center to bbox center
+                    frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, dist)
+
                     # Save final image
                     cv2.imwrite(f'{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg', frame)
 

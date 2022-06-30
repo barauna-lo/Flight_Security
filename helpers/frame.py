@@ -50,9 +50,11 @@ class Frame:
         return cv2.resize(frame, dimensions, interpolation=cv2.INTER_AREA)
 
     @staticmethod
-    def image_center(image):
-        height, width = image.shape[:2]
+    def image_center(height, width):
+        return [int(width / 2), int(height / 2)]
 
+    @staticmethod
+    def draw_image_center(image, height, width):
         start_point_horizontal = (0, int(height / 2))
         end_point_horizontal = (width, int(height / 2))
 
@@ -62,10 +64,7 @@ class Frame:
         end_point_vertical = (int(width / 2), height)
 
         cv2.line(image, start_point_vertical, end_point_vertical, (255, 0, 0), 1)
-
-        img_x_y_center = [int(width / 2), int(height / 2)]
-
-        return image, img_x_y_center
+        return image
 
     @staticmethod
     def draw_dist(frame, bbox_x_y_center, img_x_y_center, distance):
