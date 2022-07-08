@@ -1,4 +1,6 @@
 import math
+import os
+
 import numpy as np
 # import cv2
 # from utm import from_latlon
@@ -54,6 +56,16 @@ def gsd(sw, ch, fl, iw):
     # ch = camera height
     # iw = image width
     return (sw * ch) / (fl * iw)  # Distance from camera in meters
+
+
+def read_csv_geo_ref(csv_path, image_name):
+    with open(csv_path, "r") as geo_ref:
+        for row in geo_ref:
+            row_img_name, x_ref, y_ref = row.split(',')
+
+            if row_img_name == image_name:
+                y_ref = y_ref.replace('\n', '')
+                return x_ref, y_ref
 
 # Calculo Camera (Phantom 4 PRO)
 sensor_width = 13.2     # mm
