@@ -6,20 +6,21 @@ class ConfusionMatriz:
         # for which IoU < α
         self.false_negative = int(false_negative)  #This is an actual instance that is not detected by the classifier
 
-    #this function needs the (left_x1, top_y1, left_x2, top_y2) bbox configuration to work correctly
+
     @staticmethod
     def intersection_over_union(bbox_a, bbox_b):
+        # this function needs the (left_x1, top_y1, left_x2, top_y2) bbox configuration to work correctly
         xA = max(bbox_a[0], bbox_b[0])
         yA = max(bbox_a[1], bbox_b[1])
-        xB = min(bbox_a[2], bbox_b[2])
-        yB = min(bbox_a[3], bbox_b[3])
+        xB = min(bbox_a[0] + bbox_a[2], bbox_b[0] + bbox_b[2])
+        yB = min(bbox_a[1] + bbox_a[3], bbox_b[1] + bbox_b[3])
         # compute the area of intersection rectangle
         inter_area = max(0, xB - xA + 1) * max(0, yB - yA + 1)
         if inter_area > 0:
             # compute the area of both the prediction and ground-truth
             # rectangles
-            bbox_a_area = (bbox_a[2] - bbox_a[0] + 1) * (bbox_a[3] - bbox_a[1] + 1)
-            bbox_b_area = (bbox_b[2] - bbox_b[0] + 1) * (bbox_b[3] - bbox_b[1] + 1)
+            bbox_a_area = ((bbox_a[0] + bbox_a[2]) - bbox_a[0] + 1) * ((bbox_a[1] + bbox_a[3]) - bbox_a[1] + 1)
+            bbox_b_area = ((bbox_b[0] + bbox_b[2]) - bbox_b[0] + 1) * ((bbox_b[1] + bbox_b[3]) + 1)
             # compute the intersection over union by taking the intersection
             # area and dividing it by the sum of prediction + ground-truth
             # areas - the intersection area
@@ -54,11 +55,11 @@ class ConfusionMatriz:
         for tp_detected in true_positive_bbox:
             tp_detected_bb.append(tp_detected[1])
 
-        for i in detected_bbox:
-            if i not in tp_detected_bb:
-                false_positive_bbox.append(i)
-            else:
+        for detected in detected_bbox:
+            if detected in tp_detected_bb:
                 pass
+            else:
+                false_positive_bbox.append(detected)
         return false_positive_bbox
 
     @staticmethod
@@ -70,8 +71,8 @@ class ConfusionMatriz:
             tp_gt_bbox.append(tp_gt[0])
 
         for i in ground_truth_bbox:
-            if i not in tp_gt_bbox:
-                false_negative_bbox.append(i)
-            else:
+            if i in tp_gt_bbox:
                 pass
+            else:
+                false_negative_bbox.append(i)
         return false_negative_bbox

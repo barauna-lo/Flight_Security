@@ -8,26 +8,32 @@ import numpy as np
 
 from helpers.frame import Frame
 from performance.bounding_boxes import BoundingBoxes
+from performance.confusion_matriz import ConfusionMatriz
+from performance.confusion_matriz_metrics import ConfusionMatrizMetrics
 from performance.yolo_predictions import YoloPredictions
 from helpers.net_size import change_net_size
 from coordinates.geo_coordinates import gsd
+from coordinates.geo_coordinates import read_csv_geo_ref
+from coordinates.geo_coordinates import get_coordinates
 from helpers.frame import Frame
 
-flags.DEFINE_string('cfg', './detections/cfg/yolov4.cfg', 'path to cfg file')
-flags.DEFINE_integer('size', 1280, 'resize images to')
-flags.DEFINE_string('model', 'tiny', 'tiny or yolov4')
-flags.DEFINE_string('weights', './detections/weights/yolov4.weights', 'path to weights file')
-flags.DEFINE_string('data_path', './detections/tste', 'path to frames or video')
+flags.DEFINE_string('cfg', './detections/cfg/yolov4-tiny_training.cfg', 'path to cfg file')
+flags.DEFINE_integer('size', 416, 'resize net to')
+flags.DEFINE_string('model', 'tiny_trained', 'tiny or yolov4')
+flags.DEFINE_string('weights', './detections/weights/yolov4-tiny_training_best.weights', 'path to weights file')
+flags.DEFINE_string('data_path', './detections/frames', 'path to frames or video')
+flags.DEFINE_string('labeled_path', './detections/contem_pessoas/10m_yolo_annotations', 'path bbox labeled manually')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
-flags.DEFINE_string('classes', './detections/classes/coco.names', 'path to classes name video')
+flags.DEFINE_string('classes', './detections/classes/person.names', 'path to classes name')
 flags.DEFINE_string('data_type', 'frame', 'set video or frame')
-flags.DEFINE_float('sensor_width', 7.4, 'Camera sensor width') # mm
-flags.DEFINE_float('sensor_height', 5.55, 'Camera sensor_height') # mm
-flags.DEFINE_float('focal_length', 8, 'Camera focal_length') # mm
-flags.DEFINE_float('camera_height', 10, 'Camera amera_height') # mm
-flags.DEFINE_boolean('save_data', True, 'save data into csv file')
+flags.DEFINE_float('sensor_width', 460, 'Camera sensor width')  # mm
+flags.DEFINE_float('sensor_height', 120, 'Camera sensor_height')  # mm
+flags.DEFINE_float('focal_length', 116.19462501103266, 'Camera focal_length')  # mm
+flags.DEFINE_float('camera_height', 10, 'Camera amera_height')  # mm
+flags.DEFINE_boolean('save_data', False, 'save data into csv file')
 flags.DEFINE_boolean('save_frames', True, 'save frames')
-
+flags.DEFINE_boolean('confusion_matrix', False, 'evaluating detections results ')
+flags.DEFINE_boolean('save_frames_cm', False, 'save frames confusion matrix')
 
 def main(_argv):
     # .names files with the object's names
@@ -63,6 +69,7 @@ def main(_argv):
     if FLAGS.data_type == 'frame':
         i = 0
         df_data = []
+        confusion_matriz_result = []
         # loading images
         for frame in os.listdir(FLAGS.data_path):
 
@@ -72,13 +79,16 @@ def main(_argv):
             image = cv2.imread(os.path.join(FLAGS.data_path, frame))
             height, width = image.shape[:2]
 
-            if not image is None:
+            # Find image center point
+            img_x_y_center = Frame.image_center(height, width)
 
+            if not image is None:
+                print(image_name, ':')
                 # net, layer_names, image, confidence, threshold, net_height, net_width
                 boxes, confidences, classIDs, idxs = YoloPredictions.make_prediction(net, layer_names, image,
-                                                                                     0.005, 0.005, FLAGS.size, FLAGS.size)
-
-                print(image_name, ':')
+                                                                                     0.005, 0.005, FLAGS.size,
+                                                                                     FLAGS.size)
+                # class filtering
                 idx_index = 0
                 for idx in idxs:
                     class_name = labels[classIDs[idx]]
@@ -93,19 +103,36 @@ def main(_argv):
                 bbox_data = BoundingBoxes.bbox_class_filter(labels, boxes, confidences, classIDs, idxs)
 
                 # extract bbox center points
-                bbox_center_points = []
+                only_bbox_predicted = []
                 for data in bbox_data:
-                    bbox_center_points.append([data[2], data[3], data[4], data[5]])
-                x_y_center = BoundingBoxes.center_bbox(bbox_center_points)
-
-                # Find image center point
-                img_x_y_center = Frame.image_center(height, width)
+                    only_bbox_predicted.append([data[2], data[3], data[4], data[5]])
+                x_y_center = BoundingBoxes.center_bbox(only_bbox_predicted)
 
                 # Calculating GSD
                 GSD = gsd(FLAGS.sensor_width, FLAGS.camera_height, FLAGS.focal_length, width)  # metros/pixel
+                print(GSD)
 
                 # Calculating distance
                 dist = Frame.distance(x_y_center, img_x_y_center, GSD)
+
+                '''# lat long
+                # ponto de referencia 25 no IEAv
+                lat_ref = -23.252989
+                long_ref = -45.856910
+
+                ref_x, ref_y = read_csv_geo_ref('/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/geo_reference_10m.csv', image_name)
+
+                proa = 145.2
+
+                for bb_center in x_y_center:
+                    x, y = bb_center[0], bb_center[1]
+                    delta_x = x - int(ref_x)
+                    delta_y = y - int(ref_y)
+                    delta_y = - delta_y
+
+                    lat_estim, long_estim = get_coordinates(delta_x, delta_y, proa, GSD, lat_ref, long_ref)'''
+
+
 
                 # gathering all data in one variable
                 for item in range(len(bbox_data)):
@@ -124,10 +151,34 @@ def main(_argv):
                 for complete in range(len(bbox_data)):
                     df_data.append(bbox_data[complete])
 
+                if FLAGS.confusion_matrix:
+                    # only_bbox_predicted
+                    ground_truth = BoundingBoxes.bb_labeled(FLAGS.labeled_path, f'{image_name}.txt', height, width)
+                    tp = ConfusionMatriz.true_positive(ground_truth, only_bbox_predicted, 1)
+                    fp = ConfusionMatriz.false_positive(tp, only_bbox_predicted)
+                    fn = ConfusionMatriz.false_negative(tp, ground_truth)
+
+                    cm = ConfusionMatrizMetrics.confusionMatrixMetrics(len(tp), len(fp), len(fn), len(ground_truth))
+
+                    confusion_matriz_result.append(
+                        [image_name, FLAGS.size, len(tp), len(fp), len(fn), cm.precision, cm.recall, cm.accuracy, cm.f1_score,
+                         len(only_bbox_predicted), len(ground_truth)])
+
+                    if FLAGS.save_frames_cm:
+                        tp1 = []
+                        for tps in tp:
+                            tp1.append(tps[1])
+                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(image, ground_truth, (0, 255, 255)) #yellow
+                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, tp1, (0, 255, 0)) # green
+                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, fp, (255, 0, 0)) # blue
+                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, fn, (0, 0, 255)) # red
+
+                        cv2.imwrite(f'{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}_cm.jpg', img)
+
                 if FLAGS.save_frames:
                     # Draw bboxes in the image
                     frame = BoundingBoxes.draw_bounding_boxes(image, labels, boxes, confidences, classIDs, idxs, colors)
-                    frame = BoundingBoxes.draw_center_bbox(frame, bbox_center_points)
+                    frame = BoundingBoxes.draw_center_bbox(frame, only_bbox_predicted)
 
                     # Draw image center lines
                     frame = Frame.draw_image_center(frame, height, width)
@@ -146,9 +197,17 @@ def main(_argv):
 
         if FLAGS.save_data:
             # Save data into csv file
-            df = pd.DataFrame(df_data, columns=['class', 'score', 'x', 'y', 'w', 'h', 'x_center', 'y_center', 'distance', 'image_name', 'net_size', 'model', 'GSD', 'img_x_center', 'img_y_center', 'camera_height'])
-            df.to_csv(f"{FLAGS.output}/extracting_bbox_{FLAGS.camera_height}m_ {FLAGS.size}.csv", index=False)
+            df = pd.DataFrame(df_data,
+                              columns=['class', 'score', 'x', 'y', 'w', 'h', 'x_center', 'y_center', 'distance',
+                                       'image_name', 'net_size', 'model', 'GSD', 'img_x_center', 'img_y_center',
+                                       'camera_height'])
+            df.to_csv(f"{FLAGS.output}/extracting_bbox_{FLAGS.camera_height}m_{FLAGS.size}_{FLAGS.model}.csv", index=False)
 
+        if FLAGS.confusion_matrix:
+            df = pd.DataFrame(confusion_matriz_result,
+                              columns=['frame', 'net_size', 'TP', 'FP', 'FN', 'precision', 'recall',
+                                       'accuracy', 'f1_score', 'total_detected', 'total_labeled'])
+            df.to_csv(f"{FLAGS.output}/confusion_matriz_{FLAGS.camera_height}m_{FLAGS.size}_{FLAGS.model}.csv", index=False)
 
         cv2.destroyAllWindows()
     else:

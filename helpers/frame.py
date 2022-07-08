@@ -83,7 +83,7 @@ class Frame:
 
         for bb_center in bbox_x_y_center:
             bb_center = np.array((bb_center[0], bb_center[1]))
-            dist_pix = np.linalg.norm(img_x_y_center - bb_center)  # valor em Pixel
+            dist_pix = np.linalg.norm(bb_center - img_x_y_center)  # valor em Pixel
             dist = round(dist_pix * GSD, 2)
             distances.append(dist)
         return distances

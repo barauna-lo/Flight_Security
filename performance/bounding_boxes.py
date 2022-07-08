@@ -7,6 +7,8 @@ Features:
 1. left_x1, top_y1, left_x2, top_y2, width, height
 
 '''
+import os
+
 import cv2
 import numpy as np
 
@@ -161,6 +163,20 @@ class BoundingBoxes:
                 confidence = str(round(confidences[i] * 100)) + "%"
                 bboxes_data.append([label, confidence, x, y, w, h])
         return bboxes_data
+
+    @staticmethod
+    def bb_labeled(dir_labeled, file_label, im_height, im_width):
+        bbox_label = []
+
+        with open(os.path.join(dir_labeled, file_label), "r") as files_labeled:
+            for line_labeled in files_labeled:
+                # Split string to float
+                _, x, y, w, h = map(float, line_labeled.split(' '))
+                rectangle_labeled = BoundingBoxes.yolo_annotation_to_bbox(x, y, w, h, im_height, im_width)
+                bbox_label.append([rectangle_labeled[0], rectangle_labeled[1],
+                                   rectangle_labeled[2], rectangle_labeled[2]])
+
+        return bbox_label
 
 
 

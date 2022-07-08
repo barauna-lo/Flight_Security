@@ -1,8 +1,8 @@
 import os
 import cv2
-from model_performance.bounding_boxes import BoundingBoxes
-from confusion_matriz import ConfusionMatriz
-from model_performance.confusion_matriz_metrics import ConfusionMatrizMetrics
+from performance.bounding_boxes import BoundingBoxes
+from performance.confusion_matriz import ConfusionMatriz
+from performance.confusion_matriz_metrics import ConfusionMatrizMetrics
 import pandas as pd
 
 
@@ -66,7 +66,7 @@ while count < len(os.listdir(predicted)):
                         im_h, im_w, _ = img.shape
                         ground_truth = bb_labeled(labeled, file_labeled, im_h, im_w)
 
-                        tp = ConfusionMatriz.true_positive(ground_truth, detected, 30)
+                        tp = ConfusionMatriz.true_positive(ground_truth, detected, 10)
                         fp = ConfusionMatriz.false_positive(tp, detected)
                         fn = ConfusionMatriz.false_negative(tp, ground_truth)
 

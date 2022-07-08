@@ -1,0 +1,15 @@
+FLIR DUO-R Dual Thermal Imager
+Highlights:
+
+    Uncooled VOx Microbolometer
+    Sensor Resolution 160 x 120
+    57°(H) x 44°(V) FoV
+    Spectral Band 7.5 – 13.5 µm
+    Thermal Frame Rates 7.5 Hz (NTSC); 8.3 Hz (PAL)
+    Thermal Measurement Accuracy* +/-5°C or 5% of reading
+    Visible Camera Resolution 1920 × 1080
+    Visible Camera FOV 90°
+
+    Size 41 × 59 × 29.6 mm
+    Weight 84 grams
+    Conveniently fits with most popular action-camera gimbals & mounts.

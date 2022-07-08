@@ -1,8 +1,8 @@
 import os
 import cv2
-from model_performance.bounding_boxes import BoundingBoxes
-from model_performance.confusion_matriz import ConfusionMatriz
-from model_performance.confusion_matriz_metrics import ConfusionMatrizMetrics
+from performance.bounding_boxes import BoundingBoxes
+from performance.confusion_matriz import ConfusionMatriz
+from performance.confusion_matriz_metrics import ConfusionMatrizMetrics
 import pandas as pd
 
 
@@ -78,10 +78,10 @@ while count < len(os.listdir(predicted)):
                         tp1 = []
                         for tps in tp:
                             tp1.append(tps[1])
-                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, ground_truth, (0, 100, 0))
-                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, tp1, (0, 255, 0))
-                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, fp, (255, 0, 0))
-                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, fn, (0, 0, 255))
+                        #img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, ground_truth, (0, 100, 0)) #green
+                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, tp1, (0, 255, 0)) # green
+                        img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, fp, (255, 0, 0)) # blue
+                        #img = BoundingBoxes.draw_bounding_boxes_confusion_matriz(img, fn, (0, 0, 255))
                         predicted_name = '_'.join(predicted_name)
                         cv2.imwrite(f"{save_path}/{predicted_name}.jpg", img)
                         break
