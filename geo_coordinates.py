@@ -1,5 +1,6 @@
 import math
 import os
+import geopy.distance
 
 import numpy as np
 # import cv2
@@ -55,7 +56,18 @@ def gsd(sw, ch, fl, iw):
     # fl = focal length
     # ch = camera height
     # iw = image width
-    return (sw * ch) / (fl * iw)  # Distance from camera in meters
+    return (sw * ch) / (fl * iw)  # pixels in meters
+
+
+def geo_to_meter(lat_estimated, long_estimated, lat_ref, long_ref):
+    dist_meters = []
+
+    for item in range(len(lat_estimated)):
+        coords_1 = (long_estimated[item], lat_estimated[item])
+        coords_2 = (long_ref, lat_ref)
+        meters = round(geopy.distance.geodesic(coords_1, coords_2).m, 2)
+        dist_meters.append(meters)
+    return dist_meters
 
 
 def read_csv_geo_ref(csv_path, image_name):
@@ -69,14 +81,15 @@ def read_csv_geo_ref(csv_path, image_name):
 
 # Calculo Camera (Phantom 4 PRO)
 sensor_width = 13.2     # mm
-focal_lenght = 8.8      # mm
+focal_lenght = 8.930677769687193      # mm
 altura = 80.02  # m
 image_width = 5472
 image_height = 3648
 
-# GSD = (sensor_width * altura) / (focal_lenght * image_width)  # metros
-GSD = 0.0219    # metros/pixel
-
+#GSD = (sensor_width * altura) / (focal_lenght * image_width)  # metros
+#print(GSD)
+#GSD = 0.0219    # metros/pixel
+GSD = 0.021614339553217028
 
 # proa = 145.2
 #
@@ -127,5 +140,5 @@ delta_y = - delta_y
 
 lat_estim, long_estim = get_coordinates(delta_x, delta_y, proa, GSD, lat_ref, long_ref)
 
-#print('esti = (', lat_estim, ',', long_estim, ')')
-#print('real = (', lat_real, ',', long_real, ')')
+print('esti = (', lat_estim, ',', long_estim, ')')
+print('real = (', lat_real, ',', long_real, ')')

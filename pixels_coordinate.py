@@ -2,7 +2,7 @@ import os
 import cv2
 import pandas as pd
 
-data_path = '/home/ellentuane/Documents/IC/Flight Security/detections/frames'
+data_path = '/home/ellentuane/Documents/IC/Flight Security/detections/frames/147'
 output_path = '/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/geo_references'
 
 
@@ -77,5 +77,5 @@ if __name__ == "__main__":
             print(i, 'of', len(os.listdir(data_path)), 'images')
 
             i += 1
-    #df = pd.DataFrame(geo_reference, columns=['image_name', "pixel_x", "pixel_y"])
-    #df.to_csv(f"{output_path}/geo_reference_10m_leftover.csv", index=False)
+    df = pd.DataFrame(geo_reference, columns=['image_name', "pixel_x", "pixel_y"])
+    df.to_csv(f"{output_path}/147.csv", index=False)
