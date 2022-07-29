@@ -26,9 +26,9 @@ flags.DEFINE_string('labeled_path', './detections/contem_pessoas/10m_yolo_annota
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/person.names', 'path to classes name')
 flags.DEFINE_string('data_type', 'frame', 'set video or frame')
-flags.DEFINE_float('sensor_width', 3.552, 'Camera sensor width')  # mm
-flags.DEFINE_float('sensor_height', 1.998, 'Camera sensor_height')  # mm
-flags.DEFINE_float('focal_length', 2.5795, 'Camera focal_length')  # mm
+flags.DEFINE_float('sensor_width', 7.4, 'Camera sensor width')  # mm
+flags.DEFINE_float('sensor_height', 5.55, 'Camera sensor_height')  # mm
+flags.DEFINE_float('focal_length', 5.374, 'Camera focal_length')  # mm
 flags.DEFINE_float('camera_height', 20, 'Camera amera_height')  # mm
 flags.DEFINE_boolean('save_data', True, 'save data into csv file')
 flags.DEFINE_boolean('save_frames', False, 'save frames')
