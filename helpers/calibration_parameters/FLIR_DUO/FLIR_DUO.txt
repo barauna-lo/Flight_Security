@@ -9,6 +9,9 @@ Highlights:
     Thermal Measurement Accuracy* +/-5°C or 5% of reading
     Visible Camera Resolution 1920 × 1080
     Visible Camera FOV 90°
+    Pixel size (μm) = 	1.85 μm
+    apertureWidth = 3.552
+    apertureHeight = 1.998
 
     Size 41 × 59 × 29.6 mm
     Weight 84 grams

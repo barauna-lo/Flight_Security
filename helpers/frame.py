@@ -71,7 +71,7 @@ class Frame:
         i = 0
         for bb_center in bbox_x_y_center:
             cv2.line(frame, (img_x_y_center[0], img_x_y_center[1]), (bb_center[0], bb_center[1]), (255, 0, 0), 2)
-            cv2.putText(frame, f'{distance[i]} m', (bb_center[0] + 50, bb_center[1]), cv2.FONT_HERSHEY_PLAIN, 1,
+            cv2.putText(frame, f'{distance[i]} m', (bb_center[0] + 10, bb_center[1]), cv2.FONT_HERSHEY_PLAIN, 1,
                         (255, 255, 255), 2)
             i += 1
         return frame

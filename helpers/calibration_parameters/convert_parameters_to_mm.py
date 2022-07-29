@@ -18,10 +18,10 @@ S Struct with the following fields:
 
 """
 
-cameraMatrix = np.load('./helpers/calibration_parameters/FLIR_DUO/matrix.npy')
+cameraMatrix = np.load("/home/ellentuane/Documents/IC/Flight Security/helpers/calibration_parameters/FLIR_DUO/matrix.npy")
 imageSize = [1920, 1080]
-apertureWidth = 160
-apertureHeight = 120
+apertureWidth = 3.552
+apertureHeight = 1.998
 s = cv2.calibrationMatrixValues(cameraMatrix, imageSize, apertureWidth, apertureHeight)
 
 

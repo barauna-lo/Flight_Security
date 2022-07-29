@@ -20,10 +20,10 @@ def undistorted(frame, matrix_path, dist_path):
 
     return frame_undistorted
 
-matrix_path = '/home/ellentuane/Documents/IC/Flight Security/matrix.npy'
-dist_path = '/home/ellentuane/Documents/IC/Flight Security/distortion.npy'
-data_path = '/detections/frames'
-save_path = '/home/ellentuane/Documents/IC/Flight Security/detections/tste'
+matrix_path = '/home/ellentuane/Documents/IC/Flight Security/helpers/calibration_parameters/FLIR_DUO/matrix.npy'
+dist_path = '/home/ellentuane/Documents/IC/Flight Security/helpers/calibration_parameters/FLIR_DUO/distortion.npy'
+data_path = '/home/ellentuane/Documents/IC/Flight Security/detections/frames'
+save_path = '/home/ellentuane/Documents/IC/Flight Security/detections/undistorted'
 
 matrix = np.load(matrix_path)
 dist = np.load(dist_path)
@@ -38,3 +38,4 @@ for frame in os.listdir(data_path):
     frame_undistorted = cv2.undistort(image, matrix, dist, None, new_camera_matrix)
 
     cv2.imwrite(f'{save_path}/{image_name}_undistorted.jpg', frame_undistorted)
+    print('ok')

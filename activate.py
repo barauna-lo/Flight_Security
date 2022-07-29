@@ -12,26 +12,26 @@ from performance.confusion_matriz import ConfusionMatriz
 from performance.confusion_matriz_metrics import ConfusionMatrizMetrics
 from performance.yolo_predictions import YoloPredictions
 from helpers.net_size import change_net_size
-from coordinates.geo_coordinates import gsd
+from coordinates.geo_coordinates import gsd, geo_to_meter
 from coordinates.geo_coordinates import read_csv_geo_ref
 from coordinates.geo_coordinates import get_coordinates
 from helpers.frame import Frame
 
-flags.DEFINE_string('cfg', './detections/cfg/yolov4-tiny_training.cfg', 'path to cfg file')
-flags.DEFINE_integer('size', 416, 'resize net to')
+flags.DEFINE_string('cfg', './detections/cfg/yolov4-tiny_training_640.cfg', 'path to cfg file')
+flags.DEFINE_integer('size', 640, 'resize net to')
 flags.DEFINE_string('model', 'tiny_trained', 'tiny or yolov4')
-flags.DEFINE_string('weights', './detections/weights/yolov4-tiny_training_best.weights', 'path to weights file')
-flags.DEFINE_string('data_path', './detections/frames', 'path to frames or video')
+flags.DEFINE_string('weights', './detections/weights/yolov4-tiny_training_640_last.weights', 'path to weights file')
+flags.DEFINE_string('data_path', './detections/contem_pessoas/10m', 'path to frames or video')
 flags.DEFINE_string('labeled_path', './detections/contem_pessoas/10m_yolo_annotations', 'path bbox labeled manually')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/person.names', 'path to classes name')
 flags.DEFINE_string('data_type', 'frame', 'set video or frame')
-flags.DEFINE_float('sensor_width', 460, 'Camera sensor width')  # mm
-flags.DEFINE_float('sensor_height', 120, 'Camera sensor_height')  # mm
-flags.DEFINE_float('focal_length', 116.19462501103266, 'Camera focal_length')  # mm
-flags.DEFINE_float('camera_height', 10, 'Camera amera_height')  # mm
-flags.DEFINE_boolean('save_data', False, 'save data into csv file')
-flags.DEFINE_boolean('save_frames', True, 'save frames')
+flags.DEFINE_float('sensor_width', 3.552, 'Camera sensor width')  # mm
+flags.DEFINE_float('sensor_height', 1.998, 'Camera sensor_height')  # mm
+flags.DEFINE_float('focal_length', 2.5795, 'Camera focal_length')  # mm
+flags.DEFINE_float('camera_height', 20, 'Camera amera_height')  # mm
+flags.DEFINE_boolean('save_data', True, 'save data into csv file')
+flags.DEFINE_boolean('save_frames', False, 'save frames')
 flags.DEFINE_boolean('confusion_matrix', False, 'evaluating detections results ')
 flags.DEFINE_boolean('save_frames_cm', False, 'save frames confusion matrix')
 
@@ -110,19 +110,22 @@ def main(_argv):
 
                 # Calculating GSD
                 GSD = gsd(FLAGS.sensor_width, FLAGS.camera_height, FLAGS.focal_length, width)  # metros/pixel
-                print(GSD)
+                #print(GSD)
 
                 # Calculating distance
                 dist = Frame.distance(x_y_center, img_x_y_center, GSD)
 
-                '''# lat long
-                # ponto de referencia 25 no IEAv
+                # lat long
+                # ponto de reference 25 no IEAv
                 lat_ref = -23.252989
-                long_ref = -45.856910
+                long_ref = -45.85718722
 
                 ref_x, ref_y = read_csv_geo_ref('/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/geo_reference_10m.csv', image_name)
 
-                proa = 145.2
+                proa = 213.7313182
+
+                lat_estimated = []
+                long_estimated = []
 
                 for bb_center in x_y_center:
                     x, y = bb_center[0], bb_center[1]
@@ -130,9 +133,11 @@ def main(_argv):
                     delta_y = y - int(ref_y)
                     delta_y = - delta_y
 
-                    lat_estim, long_estim = get_coordinates(delta_x, delta_y, proa, GSD, lat_ref, long_ref)'''
+                    lat_estim, long_estim = get_coordinates(delta_x, delta_y, proa, GSD, lat_ref, long_ref)
+                    lat_estimated.append(lat_estim)
+                    long_estimated.append(long_estim)
 
-
+                geo_to_meters = geo_to_meter(lat_estimated, long_estimated, lat_ref, long_ref)
 
                 # gathering all data in one variable
                 for item in range(len(bbox_data)):
@@ -146,6 +151,9 @@ def main(_argv):
                     bbox_data[item].append(img_x_y_center[0])
                     bbox_data[item].append(img_x_y_center[1])
                     bbox_data[item].append(FLAGS.camera_height)
+                    bbox_data[item].append(lat_estimated[item])
+                    bbox_data[item].append(long_estimated[item])
+                    bbox_data[item].append(geo_to_meters[item])
 
                 # adding data to data frame variable
                 for complete in range(len(bbox_data)):
@@ -200,7 +208,7 @@ def main(_argv):
             df = pd.DataFrame(df_data,
                               columns=['class', 'score', 'x', 'y', 'w', 'h', 'x_center', 'y_center', 'distance',
                                        'image_name', 'net_size', 'model', 'GSD', 'img_x_center', 'img_y_center',
-                                       'camera_height'])
+                                       'camera_height', 'lat_estimaated', 'long_estimated','geo to meters'])
             df.to_csv(f"{FLAGS.output}/extracting_bbox_{FLAGS.camera_height}m_{FLAGS.size}_{FLAGS.model}.csv", index=False)
 
         if FLAGS.confusion_matrix:
