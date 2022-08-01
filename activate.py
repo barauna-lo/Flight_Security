@@ -19,9 +19,9 @@ from helpers.frame import Frame
 
 flags.DEFINE_string('cfg', './detections/cfg/yolov4-tiny_training_640.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 640, 'resize net to')
-flags.DEFINE_string('model', 'tiny_trained_30', 'tiny or yolov4')
+flags.DEFINE_string('model', 'tiny_trained', 'tiny or yolov4')
 flags.DEFINE_string('weights', './detections/weights/yolov4-tiny_training_640_last.weights', 'path to weights file')
-flags.DEFINE_string('data_path', './detections/frames', 'path to frames or video')
+flags.DEFINE_string('data_path', './detections/contem_pessoas/10m', 'path to frames or video')
 flags.DEFINE_string('labeled_path', './detections/contem_pessoas/10m_yolo_annotations', 'path bbox labeled manually')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/person.names', 'path to classes name')
@@ -75,6 +75,10 @@ def main(_argv):
 
             # remove .jpg or any image type from image name
             image_name = frame.split(".")[0]
+
+            # case img name has added a new item as in undistorted
+            image_name = image_name.split("_")[0:3]
+            image_name = "_".join(image_name)
 
             image = cv2.imread(os.path.join(FLAGS.data_path, frame))
             height, width = image.shape[:2]
