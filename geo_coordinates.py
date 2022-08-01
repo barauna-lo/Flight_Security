@@ -79,6 +79,17 @@ def read_csv_geo_ref(csv_path, image_name):
                 y_ref = y_ref.replace('\n', '')
                 return x_ref, y_ref
 
+
+def read_csv_proa_ref(csv_path, image_name):
+    with open(csv_path, "r") as proa_ref:
+        for row in proa_ref:
+            row_img_name, proa, height = row.split(',')
+            row_img_name = row_img_name.split(".")[0]
+
+            if row_img_name == image_name:
+                return float(proa)
+
+
 # Calculo Camera (Phantom 4 PRO)
 sensor_width = 13.2     # mm
 focal_lenght = 8.930677769687193      # mm
