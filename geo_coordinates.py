@@ -75,6 +75,9 @@ def read_csv_geo_ref(csv_path, image_name):
         for row in geo_ref:
             row_img_name, x_ref, y_ref = row.split(',')
 
+            row_img_name = row_img_name.split("_")[0:3]
+            row_img_name = "_".join(row_img_name)
+
             if row_img_name == image_name:
                 y_ref = y_ref.replace('\n', '')
                 return x_ref, y_ref
