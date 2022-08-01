@@ -12,16 +12,16 @@ from performance.confusion_matriz import ConfusionMatriz
 from performance.confusion_matriz_metrics import ConfusionMatrizMetrics
 from performance.yolo_predictions import YoloPredictions
 from helpers.net_size import change_net_size
-from coordinates.geo_coordinates import gsd, geo_to_meter
+from coordinates.geo_coordinates import gsd, geo_to_meter, read_csv_proa_ref
 from coordinates.geo_coordinates import read_csv_geo_ref
 from coordinates.geo_coordinates import get_coordinates
 from helpers.frame import Frame
 
 flags.DEFINE_string('cfg', './detections/cfg/yolov4-tiny_training_640.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 640, 'resize net to')
-flags.DEFINE_string('model', 'tiny_trained', 'tiny or yolov4')
+flags.DEFINE_string('model', 'tiny_trained_30', 'tiny or yolov4')
 flags.DEFINE_string('weights', './detections/weights/yolov4-tiny_training_640_last.weights', 'path to weights file')
-flags.DEFINE_string('data_path', './detections/contem_pessoas/10m', 'path to frames or video')
+flags.DEFINE_string('data_path', './detections/frames', 'path to frames or video')
 flags.DEFINE_string('labeled_path', './detections/contem_pessoas/10m_yolo_annotations', 'path bbox labeled manually')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/person.names', 'path to classes name')
@@ -29,9 +29,9 @@ flags.DEFINE_string('data_type', 'frame', 'set video or frame')
 flags.DEFINE_float('sensor_width', 7.4, 'Camera sensor width')  # mm
 flags.DEFINE_float('sensor_height', 5.55, 'Camera sensor_height')  # mm
 flags.DEFINE_float('focal_length', 5.374, 'Camera focal_length')  # mm
-flags.DEFINE_float('camera_height', 20, 'Camera amera_height')  # mm
+flags.DEFINE_float('camera_height', 10, 'Camera amera_height')  # mm
 flags.DEFINE_boolean('save_data', True, 'save data into csv file')
-flags.DEFINE_boolean('save_frames', False, 'save frames')
+flags.DEFINE_boolean('save_frames', True, 'save frames')
 flags.DEFINE_boolean('confusion_matrix', False, 'evaluating detections results ')
 flags.DEFINE_boolean('save_frames_cm', False, 'save frames confusion matrix')
 
@@ -121,9 +121,8 @@ def main(_argv):
                 long_ref = -45.85718722
 
                 ref_x, ref_y = read_csv_geo_ref('/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/geo_reference_10m.csv', image_name)
-
-                proa = 213.7313182
-
+                proa = read_csv_proa_ref('/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/Dados voo Flir Duo R.csv', image_name)
+                ref_point = [int(ref_x), int(ref_y)]
                 lat_estimated = []
                 long_estimated = []
 
@@ -189,10 +188,13 @@ def main(_argv):
                     frame = BoundingBoxes.draw_center_bbox(frame, only_bbox_predicted)
 
                     # Draw image center lines
-                    frame = Frame.draw_image_center(frame, height, width)
+                    #frame = Frame.draw_image_center(frame, height, width)
 
                     # Draw line from image center to bbox center
-                    frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, dist)
+                    #frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, dist)
+
+                    # Draw line from ref point to bbox center
+                    frame = Frame.draw_dist(frame, x_y_center, ref_point, geo_to_meters)
 
                     # Save final image
                     cv2.imwrite(f'{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg', frame)
