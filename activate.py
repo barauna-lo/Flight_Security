@@ -17,10 +17,10 @@ from coordinates.geo_coordinates import read_csv_geo_ref
 from coordinates.geo_coordinates import get_coordinates
 from helpers.frame import Frame
 
-flags.DEFINE_string('cfg', './detections/cfg/yolov4-tiny_training_640.cfg', 'path to cfg file')
+flags.DEFINE_string('cfg', './detections/cfg/yolov4-custom-training.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 640, 'resize net to')
-flags.DEFINE_string('model', 'tiny_trained', 'tiny or yolov4')
-flags.DEFINE_string('weights', './detections/weights/yolov4-tiny_training_640_last.weights', 'path to weights file')
+flags.DEFINE_string('model', 'yolo_tiny_custom', 'tiny or yolov4')
+flags.DEFINE_string('weights', './detections/weights/yolov4-custom-training_last.weights', 'path to weights file')
 flags.DEFINE_string('data_path', './detections/contem_pessoas/10m', 'path to frames or video')
 flags.DEFINE_string('labeled_path', './detections/contem_pessoas/10m_yolo_annotations', 'path bbox labeled manually')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
@@ -30,9 +30,9 @@ flags.DEFINE_float('sensor_width', 7.4, 'Camera sensor width')  # mm
 flags.DEFINE_float('sensor_height', 5.55, 'Camera sensor_height')  # mm
 flags.DEFINE_float('focal_length', 5.374, 'Camera focal_length')  # mm
 flags.DEFINE_float('camera_height', 10, 'Camera amera_height')  # mm
-flags.DEFINE_boolean('save_data', True, 'save data into csv file')
-flags.DEFINE_boolean('save_frames', True, 'save frames')
-flags.DEFINE_boolean('confusion_matrix', False, 'evaluating detections results ')
+flags.DEFINE_boolean('save_data', False, 'save data into csv file')
+flags.DEFINE_boolean('save_frames', False, 'save frames')
+flags.DEFINE_boolean('confusion_matrix', True, 'evaluating detections results ')
 flags.DEFINE_boolean('save_frames_cm', False, 'save frames confusion matrix')
 
 def main(_argv):
