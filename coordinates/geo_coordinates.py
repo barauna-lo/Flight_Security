@@ -1,4 +1,7 @@
 import math
+import os
+import geopy.distance
+
 import numpy as np
 # import cv2
 # from utm import from_latlon
@@ -49,22 +52,59 @@ def get_coordinates(delta_x, delta_y, proa, GSD, lat_ref, long_ref, raio_terra=6
 
 def gsd(sw, ch, fl, iw):
     # grounding sample distance
-    # sd = sensor width
+    # sw = sensor width
     # fl = focal length
     # ch = camera height
     # iw = image width
-    return (sw * ch) / (fl * iw)  # Distance from camera in meters
+    return (sw * ch) / (fl * iw)  # pixels in meters
+
+
+def geo_to_meter(lat_estimated, long_estimated, lat_ref, long_ref):
+    #
+    dist_meters = []
+
+    for item in range(len(lat_estimated)):
+        coords_1 = (long_estimated[item], lat_estimated[item])
+        coords_2 = (long_ref, lat_ref)
+        meters = round(geopy.distance.geodesic(coords_1, coords_2).m, 2)
+        dist_meters.append(meters)
+    return dist_meters
+
+
+def read_csv_geo_ref(csv_path, image_name):
+    with open(csv_path, "r") as geo_ref:
+        for row in geo_ref:
+            row_img_name, x_ref, y_ref = row.split(',')
+
+            row_img_name = row_img_name.split("_")[0:3]
+            row_img_name = "_".join(row_img_name)
+
+            if row_img_name == image_name:
+                y_ref = y_ref.replace('\n', '')
+                return x_ref, y_ref
+
+
+def read_csv_proa_ref(csv_path, image_name):
+    with open(csv_path, "r") as proa_ref:
+        for row in proa_ref:
+            row_img_name, proa, height = row.split(',')
+            row_img_name = row_img_name.split(".")[0]
+
+            if row_img_name == image_name:
+                return float(proa)
+
 
 # Calculo Camera (Phantom 4 PRO)
 sensor_width = 13.2     # mm
-focal_lenght = 8.8      # mm
+focal_lenght = 8.930677769687193      # mm
 altura = 80.02  # m
 image_width = 5472
 image_height = 3648
 
-# GSD = (sensor_width * altura) / (focal_lenght * image_width)  # metros
-GSD = 0.0219    # metros/pixel
-
+#GSD = (sensor_width * altura) / (focal_lenght * image_width)  # metros
+#print(GSD)
+#GSD = 0.0219    # metros/pixel
+GSD = 0.021614339553217028
 
 # proa = 145.2
 #
