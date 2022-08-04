@@ -60,6 +60,7 @@ def gsd(sw, ch, fl, iw):
 
 
 def geo_to_meter(lat_estimated, long_estimated, lat_ref, long_ref):
+    #
     dist_meters = []
 
     for item in range(len(lat_estimated)):
