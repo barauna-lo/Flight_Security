@@ -20,14 +20,14 @@ def undistorted(frame, matrix_path, dist_path):
 
     return frame_undistorted
 
-matrix_path = '/home/ellentuane/Documents/IC/Flight Security/helpers/calibration_parameters/FLIR_DUO/matrix.npy'
-dist_path = '/home/ellentuane/Documents/IC/Flight Security/helpers/calibration_parameters/FLIR_DUO/distortion.npy'
-data_path = '/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/15m'
-save_path = '/home/ellentuane/Documents/IC/Flight Security/detections/undistorted'
+matrix_path = '/home/ellentuane/Documents/IC/Flight Security/helpers/calibration_parameters/phantom/parameter_06/matrix_06.npy'
+dist_path = '/home/ellentuane/Documents/IC/Flight Security/helpers/calibration_parameters/phantom/parameter_06/distortion_06.npy'
+data_path = '/home/ellentuane/Documents/IC/Flight Security/coordinates/phantom'
+save_path = '/home/ellentuane/Documents/IC/Flight Security/coordinates/phantom/'
 
 matrix = np.load(matrix_path)
 dist = np.load(dist_path)
-0
+
 
 for frame in os.listdir(data_path):
     image_name = frame.split(".")[0]
@@ -37,8 +37,8 @@ for frame in os.listdir(data_path):
     new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(matrix, dist, (w, h), 1, (w, h))
     frame_undistorted = cv2.undistort(image, matrix, dist, None, new_camera_matrix)
 
-    cropped = frame_undistorted[180:900, 115:1650]
+    #cropped = frame_undistorted[180:900, 115:1650]
 
-    cv2.imwrite(f'{save_path}/{image_name}_undistorted.jpg', cropped)
+    cv2.imwrite(f'{save_path}/{image_name}_undistorted_06.jpg', frame_undistorted)
 
     print(image_name)

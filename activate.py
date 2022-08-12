@@ -17,11 +17,11 @@ from coordinates.geo_coordinates import read_csv_geo_ref
 from coordinates.geo_coordinates import get_coordinates
 from helpers.frame import Frame
 
-flags.DEFINE_string('cfg', './detections/cfg/yolov4-custom-training.cfg', 'path to cfg file')
+flags.DEFINE_string('cfg', './detections/cfg/yolov4-tiny_training_640.cfg', 'path to cfg file')
 flags.DEFINE_integer('size', 640, 'resize net to')
-flags.DEFINE_string('model', 'yolo_tiny_custom', 'tiny or yolov4')
-flags.DEFINE_string('weights', './detections/weights/yolov4-custom-training_last.weights', 'path to weights file')
-flags.DEFINE_string('data_path', './detections/contem_pessoas/10m', 'path to frames or video')
+flags.DEFINE_string('model', 'yolo_tiny_custom_1', 'tiny or yolov4')
+flags.DEFINE_string('weights', './detections/weights/yolov4-tiny_training_640_best.weights', 'path to weights file')
+flags.DEFINE_string('data_path', './detections/frames/15_undistorted', 'path to frames or video')
 flags.DEFINE_string('labeled_path', './detections/contem_pessoas/10m_yolo_annotations', 'path bbox labeled manually')
 flags.DEFINE_string('output', './detections/extracted_bbox', 'path to output bboxes')
 flags.DEFINE_string('classes', './detections/classes/person.names', 'path to classes name')
@@ -29,10 +29,10 @@ flags.DEFINE_string('data_type', 'frame', 'set video or frame')
 flags.DEFINE_float('sensor_width', 7.4, 'Camera sensor width')  # mm
 flags.DEFINE_float('sensor_height', 5.55, 'Camera sensor_height')  # mm
 flags.DEFINE_float('focal_length', 5.374, 'Camera focal_length')  # mm
-flags.DEFINE_float('camera_height', 10, 'Camera amera_height')  # mm
+flags.DEFINE_float('camera_height', 20, 'Camera amera_height')  # mm
 flags.DEFINE_boolean('save_data', False, 'save data into csv file')
-flags.DEFINE_boolean('save_frames', False, 'save frames')
-flags.DEFINE_boolean('confusion_matrix', True, 'evaluating detections results ')
+flags.DEFINE_boolean('save_frames', True, 'save frames')
+flags.DEFINE_boolean('confusion_matrix', False, 'evaluating detections results ')
 flags.DEFINE_boolean('save_frames_cm', False, 'save frames confusion matrix')
 
 def main(_argv):
@@ -124,12 +124,21 @@ def main(_argv):
                 lat_ref = -23.252989
                 long_ref = -45.85718722
 
-                ref_x, ref_y = read_csv_geo_ref('/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/geo_reference_10m.csv', image_name)
+                ref_x, ref_y = read_csv_geo_ref('/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/geo_reference_15m.csv', image_name)
                 proa = read_csv_proa_ref('/home/ellentuane/Documents/IC/Flight Security/detections/contem_pessoas/Dados voo Flir Duo R.csv', image_name)
                 ref_point = [int(ref_x), int(ref_y)]
                 lat_estimated = []
                 long_estimated = []
 
+                # estimating drone position
+                drone_x, drone_y = img_x_y_center[0], img_x_y_center[1]
+                drone_delta_x = drone_x - int(ref_x)
+                drone_delta_y = drone_y - int(ref_y)
+                drone_delta_y = - drone_delta_y
+
+                drone_lat_estim, drone_long_estim = get_coordinates(drone_delta_x, drone_delta_y, proa, GSD, lat_ref, long_ref)
+
+                # estimating obj position
                 for bb_center in x_y_center:
                     x, y = bb_center[0], bb_center[1]
                     delta_x = x - int(ref_x)
@@ -140,7 +149,8 @@ def main(_argv):
                     lat_estimated.append(lat_estim)
                     long_estimated.append(long_estim)
 
-                geo_to_meters = geo_to_meter(lat_estimated, long_estimated, lat_ref, long_ref)
+                #geo_to_meters = geo_to_meter(lat_estimated, long_estimated, lat_ref, long_ref)
+                geo_to_meters = geo_to_meter(lat_estimated, long_estimated, drone_lat_estim, drone_long_estim)
 
                 # gathering all data in one variable
                 for item in range(len(bbox_data)):
@@ -198,7 +208,10 @@ def main(_argv):
                     #frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, dist)
 
                     # Draw line from ref point to bbox center
-                    frame = Frame.draw_dist(frame, x_y_center, ref_point, geo_to_meters)
+                    #frame = Frame.draw_dist(frame, x_y_center, ref_point, geo_to_meters)
+
+                    # Draw line from img center point to bbox center
+                    frame = Frame.draw_dist(frame, x_y_center, img_x_y_center, geo_to_meters)
 
                     # Save final image
                     cv2.imwrite(f'{FLAGS.output}/{image_name}_{FLAGS.size}_{FLAGS.model}.jpg', frame)
